@@ -9,7 +9,7 @@ led.direction = Direction.OUTPUT
 
 baud = 115200
 
-uart = busio.UART(board.TX, board.RX, baudrate=baud)
+#uart = busio.UART(board.TX, board.RX, baudrate=baud)
 
 # TODO: Check the adafruit docs to see if these uart values are right for our sensor later
 # FINISHED: The baudrate is 115200
