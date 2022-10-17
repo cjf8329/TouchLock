@@ -7,11 +7,15 @@ import adafruit_fingerprint
 led = DigitalInOut(board.D13)
 led.direction = Direction.OUTPUT
 
-uart = busio.UART(board.TX, board.RX, baudrate=57600)
+baud = 115200
+
+uart = busio.UART(board.TX, board.RX, baudrate=baud)
 
 # TODO: Check the adafruit docs to see if these uart values are right for our sensor later
+# FINISHED: The baudrate is 115200
+
 import serial
-uart = serial.Serial("/dev/ttyS0", baudrate=57600, timeout=1)
+uart = serial.Serial("/dev/ttyS0", baudrate=baud, timeout=1)
 
 finger = adafruit_fingerprint.Adafruit_Fingerprint(uart)
 
