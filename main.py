@@ -2,6 +2,7 @@ from fingerprint_module import fingerprint_sensor
 from email_module import Emailer
 from servo_module import Servo
 from LED_module import LEDs
+from picamera import PiCamera
 import time
 import pyttsx3
 
@@ -9,13 +10,15 @@ import pyttsx3
 class TouchLock:
 
     def __init__(self):
-        # initializing fingerprint scanner
+        print("initializing")
+		# initializing fingerprint scanner
         self.scanner = fingerprint_sensor()
-
-        # declaring pins
-        self.servo_pin = 11
-        self.red_LED_pin = 13
-        self.green_LED_pin = 15
+        
+        # initializing picamera, starting early since this can take a few seconds
+        self.camera = PiCamera()
+        self.camera.resolution = (1280, 720)
+        self.camera.start_preview()
+        
 
         # creating email sender
         email_address = "touchlock.biolock@gmail.com"
@@ -23,20 +26,20 @@ class TouchLock:
         self.recipient = "cjf8329@nyu.edu" #for proof-of-concept
         self.emailer = Emailer(email_address, password)
 
-        #creating servo
+        # creating servo
         self.servo_open_position = 90
         self.servo_timing = 3
-        servo_pin = 11
+        servo_pin = 17
         frequency = 50
         servo_closed_position = 0
         self.servo = Servo(servo_pin, frequency, servo_closed_position)
 
-        #creating LED module (NOTE: these are the standalone LED bulbs, not the builtin LEDs inside of the fingerprint scanner
-        red_LED_pin = 13
-        green_LED_pin = 15
+        # creating LED module (NOTE: these are the standalone LED bulbs, not the builtin LEDs inside of the fingerprint scanner
+        red_LED_pin = 27
+        green_LED_pin = 22
         self.LEDs = LEDs(red_LED_pin, green_LED_pin)
 
-        #text-to-speech setup
+        # text-to-speech setup
         self.engine = pyttsx3.init()
         #engine.setProperty('rate', 125)     #change rate of speech, uncomment if needed
         #engine.setProperty('volume',1.0)    #change volume of speech, uncomment if needed
@@ -58,10 +61,12 @@ class TouchLock:
     # turns LEDs off 3 seconds later
     def denyAccess(self):
         print("Denying access")
-        self.emailer.create_email("Unauthorized TouchLock user", self.recipient) # TODO: Take picture with picamera and attach here using optional argument "attachment"
+        self.camera.capture("unauthorized.png")
+        self.emailer.create_email("Unauthorized TouchLock user", self.recipient, attachment="unauthorized.png") # TODO: Take picture with picamera and attach here using optional argument "attachment"
         self.LEDs.LED_power([True, False])
         self.engine.say("Access denied")
         self.engine.runAndWait()
+        self.emailer.send_email()
         time.sleep(self.servo_timing)
         self.LEDs.LED_power([False, False])
 

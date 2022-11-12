@@ -23,17 +23,21 @@ class fingerprint_sensor:
         # create scanner instance
         self.scanner = adafruit_fingerprint.Adafruit_Fingerprint(self.uart)
 
-        # open pickled name list
-        with open("names", "rb") as f:
-            self.names = pickle.load(f)
+        # try to open pickled name list, if it's not there, make one
+        try:
+            with open("names", "rb") as f:
+                self.names = pickle.load(f)
+        except:
+            self.names = [None] * 127
+            self.pickle_names()
 
         #make sure list of len() 127 has been initialized
         try:
             if (len(self.names) != 127):
-                names = [None] * 127
+                self.names = [None] * 127
                 self.pickle_names()
         except:
-            names = [None] * 127
+            self.names = [None] * 127
             self.pickle_names()
 
     # scan fingerprint with detailed output
@@ -319,7 +323,7 @@ class fingerprint_sensor:
                 self.enroll_finger_simple(self.get_num())
             if c == "f":
                 if self.get_fingerprint_simple():
-                    print("Detected #", self.scanner.finger_id)
+                    print("Detected #", self.scanner.finger_id, " Name: ", self.names[self.scanner.finger_id])
                 else:
                     print("Detection unsuccessful")
             if c == "z":
@@ -331,6 +335,6 @@ class fingerprint_sensor:
                 self.enroll_finger_verbose(self.get_num())
             if c == "fv":
                 if self.get_fingerprint_verbose():
-                    print("Detected #", self.scanner.finger_id, "with confidence", self.scanner.confidence)
+                    print("Detected #", self.scanner.finger_id, " Name: ", self.names[self.scanner.finger_id], "with confidence", self.scanner.confidence)
                 else:
                     print("Detection unsuccessful")
