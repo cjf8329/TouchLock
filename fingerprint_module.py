@@ -3,6 +3,7 @@ import board
 from digitalio import DigitalInOut, Direction
 import adafruit_fingerprint
 import serial
+import pickle
 
 # no parameters are passed on class creation, it is assumed that UART via GPIO is used for sensor communication
 class fingerprint_sensor:
@@ -21,6 +22,19 @@ class fingerprint_sensor:
 
         # create scanner instance
         self.scanner = adafruit_fingerprint.Adafruit_Fingerprint(self.uart)
+
+        # open pickled name list
+        with open("names", "rb") as f:
+            self.names = pickle.load(f)
+
+        #make sure list of len() 127 has been initialized
+        try:
+            if (len(self.names) != 127):
+                names = [None] * 127
+                self.pickle_names()
+        except:
+            names = [None] * 127
+            self.pickle_names()
 
     # scan fingerprint with detailed output
     def get_fingerprint_verbose(self):
@@ -182,6 +196,9 @@ class fingerprint_sensor:
             return False
 
         print("Storing model #%d..." % location, end="")
+        input_name = input("Enter associated name \n>")
+        self.names[location] = input_name
+        self.pickle_names()
         i = self.scanner.store_model(location)
         if i == adafruit_fingerprint.OK:
             print("Stored")
@@ -238,6 +255,9 @@ class fingerprint_sensor:
             return False
 
         print("Storing model #%d..." % location, end="")
+        input_name = input("Enter associated name \n>")
+        self.names[location] = input_name
+        self.pickle_names()
         i = self.scanner.store_model(location)
         if i == adafruit_fingerprint.OK:
             print("Stored")
@@ -246,6 +266,25 @@ class fingerprint_sensor:
             return False
 
         return True
+
+    def in_use(self):
+        if self.scanner.get_image() == adafruit_fingerprint.NOFINGER:
+            return False
+        else:
+            return True
+
+    # remove all stored fingerprints
+    def delete_all(self):
+        print("Deleting...", end="")
+        self.names = [None] * 127
+        self.pickle_names()
+        for x in range(1,128):
+            self.scanner.delete_model(x)
+        print("done")
+
+    def pickle_names(self):
+        with open("names", "wb") as f:
+            pickle.dump(self.names, f)
 
     # prompt user for number indicating fingerprint storage location
     def get_num(self):
@@ -266,6 +305,7 @@ class fingerprint_sensor:
             if self.scanner.read_templates() != adafruit_fingerprint.OK:
                 raise RuntimeError("Failed to read templates")
             print("Fingerprint templates:", self.scanner.templates)
+            print("d) delete all fingerprints")
             print("e) enroll print")
             print("f) find print")
             print("z) end setup")
@@ -273,6 +313,8 @@ class fingerprint_sensor:
             c = input("> ")
 
             # by default, use simple output
+            if c == "d":
+                self.delete_all()
             if c == "e":
                 self.enroll_finger_simple(self.get_num())
             if c == "f":
