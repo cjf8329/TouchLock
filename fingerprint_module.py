@@ -24,6 +24,9 @@ class fingerprint_sensor:
 
     # scan fingerprint with detailed output
     def get_fingerprint_verbose(self):
+        print("Place finger on scanner")
+        while (self.scanner.get_image() == adafruit_fingerprint.NOFINGER):
+            pass
         print("Scanning...", end="")
         i = self.scanner.get_image()
         if i == adafruit_fingerprint.OK:
@@ -68,6 +71,9 @@ class fingerprint_sensor:
 
     # scan fingerprint with simple output
     def get_fingerprint_simple(self):
+        print("Place finger on scanner")
+        while (self.scanner.get_image() == adafruit_fingerprint.NOFINGER):
+            pass
         print("Scanning...", end="")
         i = self.scanner.get_image()
         if i == adafruit_fingerprint.OK:
@@ -93,6 +99,31 @@ class fingerprint_sensor:
             return True
         else:
             print("searching failed")
+            return False
+            
+    # scan fingerprint and only return ID without console output
+    def get_fingerprint_supress(self):
+        while (self.scanner.get_image() == adafruit_fingerprint.NOFINGER):
+            pass
+        i = self.scanner.get_image()
+        if i == adafruit_fingerprint.OK:
+            pass
+        else:
+            return False
+
+        i = self.scanner.image_2_tz(1)
+        if i == adafruit_fingerprint.OK:
+            pass
+        else:
+            return False
+
+        i = self.scanner.finger_fast_search()
+
+
+        if i == adafruit_fingerprint.OK:
+            print(self.scanner.finger_id)
+            return self.scanner.finger_id
+        else:
             return False
 
     # enroll fingerprint with detailed output
@@ -179,7 +210,9 @@ class fingerprint_sensor:
                 if i == adafruit_fingerprint.OK:
                     print("Image taken")
                     break
-
+                elif i == adafruit_fingerprint.NOFINGER:
+                    print(".", end="")
+                    continue
                 return False
 
             print("Templating...", end="")
@@ -235,6 +268,7 @@ class fingerprint_sensor:
             print("Fingerprint templates:", self.scanner.templates)
             print("e) enroll print")
             print("f) find print")
+            print("z) end setup")
             print("----------------")
             c = input("> ")
 
@@ -246,11 +280,14 @@ class fingerprint_sensor:
                     print("Detected #", self.scanner.finger_id)
                 else:
                     print("Detection unsuccessful")
+            if c == "z":
+                print("ending setup")
+                break
 
             # alternatively, enter ev or fv for verbose output
             if c == "ev":
                 self.enroll_finger_verbose(self.get_num())
-            if c == "fd":
+            if c == "fv":
                 if self.get_fingerprint_verbose():
                     print("Detected #", self.scanner.finger_id, "with confidence", self.scanner.confidence)
                 else:
