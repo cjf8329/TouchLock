@@ -43,6 +43,7 @@ class fingerprint_sensor:
     # scan fingerprint with detailed output
     def get_fingerprint_verbose(self):
         print("Place finger on scanner")
+        time.sleep(0.2)
         while (self.scanner.get_image() == adafruit_fingerprint.NOFINGER):
             pass
         print("Scanning...", end="")

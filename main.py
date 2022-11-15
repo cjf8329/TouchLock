@@ -10,14 +10,13 @@ import pyttsx3
 class TouchLock:
 
     def __init__(self):
-        print("initializing")
+        print("initializing", end="...")
 		# initializing fingerprint scanner
         self.scanner = fingerprint_sensor()
         
         # initializing picamera, starting early since this can take a few seconds
         self.camera = PiCamera()
         self.camera.resolution = (1280, 720)
-        self.camera.start_preview()
         
 
         # creating email sender
@@ -43,24 +42,26 @@ class TouchLock:
         self.engine = pyttsx3.init()
         #engine.setProperty('rate', 125)     #change rate of speech, uncomment if needed
         #engine.setProperty('volume',1.0)    #change volume of speech, uncomment if needed
+        print("done")
 
     # grants access to individual named "name";
     # turns on green LED, runs servo to open position, and tts says "Access granted"
     # turns LEDs off and runs servo to closed position 3 seconds later
     def grantAccess(self, name):
-        print("Granting access to " + name)
+        print("Granting access to " + name, end='...')
         self.emailer.create_email(f"{name} has been authorized by TouchLock", self.recipient) # TODO: Take picture with picamera and attach here using optional argument "attachment"
         self.LEDs.LED_power([False, True])
         self.engine.say(f"Access granted, {name}")
         self.engine.runAndWait()
         self.servo.set_angle(self.servo_open_position, self.servo_timing)
         self.LEDs.LED_power([False, False])
+        print('done')
 
     # denies access to user
     # turns on red LED, servo stays closed, and tts says "Access denied"
     # turns LEDs off 3 seconds later
     def denyAccess(self):
-        print("Denying access")
+        print("Denying access", end='...')
         self.camera.capture("unauthorized.png")
         self.emailer.create_email("Unauthorized TouchLock user", self.recipient, attachment="unauthorized.png") # TODO: Take picture with picamera and attach here using optional argument "attachment"
         self.LEDs.LED_power([True, False])
@@ -69,6 +70,7 @@ class TouchLock:
         self.emailer.send_email()
         time.sleep(self.servo_timing)
         self.LEDs.LED_power([False, False])
+        print('done')
 
     # main loop
     def main_loop(self):

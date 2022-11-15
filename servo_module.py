@@ -15,7 +15,7 @@ class Servo:
     def set_angle(self, angle, servo_timing):
         self.pwm.start(2.5)
         duty = (angle/18) + 2.5
-        print("turning to angle")
+        #print("turning to angle")
         GPIO.output(self.pin, True)
         self.pwm.ChangeDutyCycle(duty)
         time.sleep(servo_timing)
